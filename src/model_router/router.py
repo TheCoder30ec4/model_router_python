@@ -46,6 +46,7 @@ class Router:
         catalog = fetch_catalog()
 
         if models:
+            models = list(dict.fromkeys(models))
             unknown = [m for m in models if m not in catalog]
             if unknown:
                 raise UnknownModelError(f"Not in OpenRouter catalog: {unknown}")
@@ -57,6 +58,7 @@ class Router:
                 if not found:
                     raise UnknownModelError(f"No models found for provider '{p}'")
                 self.models += found
+            self.models = list(dict.fromkeys(self.models))
 
     def api_key_for(self, model_id):
         """The API key you passed for this model's provider, or None."""

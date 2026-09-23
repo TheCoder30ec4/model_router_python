@@ -62,6 +62,14 @@ class ConfigTest(unittest.TestCase):
         r = make_router(models=None, providers=["acme"])
         self.assertEqual([m.id for m in r.models], ["acme/new", "acme/old"])  # no :batch, no retiring
 
+    def test_duplicate_models_deduplicated_preserving_order(self):
+        r = make_router(models=["cheap/small", "cheap/small", "big/smart"])
+        self.assertEqual([m.id for m in r.models], ["cheap/small", "big/smart"])
+
+    def test_duplicate_providers_deduplicated_preserving_order(self):
+        r = make_router(models=None, providers=["acme", "acme"])
+        self.assertEqual([m.id for m in r.models], ["acme/new", "acme/old"])
+
     def test_catalog_is_fetched_once_and_cached(self):
         from model_router import catalog
 
