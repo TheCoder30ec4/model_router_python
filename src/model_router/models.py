@@ -36,3 +36,17 @@ class ModelInfo:
 class Limits:
     output_tokens: int = 1024
     max_cost_usd: float | None = None
+
+    def __post_init__(self):
+        if (
+            isinstance(self.output_tokens, bool)
+            or not isinstance(self.output_tokens, int)
+            or self.output_tokens < 1
+        ):
+            raise ValueError("output_tokens must be an integer >= 1")
+        if self.max_cost_usd is not None and (
+            isinstance(self.max_cost_usd, bool)
+            or not isinstance(self.max_cost_usd, (int, float))
+            or not self.max_cost_usd >= 0
+        ):
+            raise ValueError("max_cost_usd must be None or a number >= 0")

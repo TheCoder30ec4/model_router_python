@@ -56,6 +56,28 @@ class LimitsTest(unittest.TestCase):
     def test_defaults(self):
         self.assertEqual(Limits(), Limits(output_tokens=1024, max_cost_usd=None))
 
+    def test_positive_integer_output_tokens_are_accepted(self):
+        for output_tokens in (1, 500, 1024):
+            with self.subTest(output_tokens=output_tokens):
+                self.assertEqual(Limits(output_tokens=output_tokens).output_tokens, output_tokens)
+
+    def test_invalid_output_tokens_raise_value_error(self):
+        for output_tokens in (0, -5, 1.0, 1.5, "1", None, True, False):
+            with self.subTest(output_tokens=output_tokens):
+                with self.assertRaisesRegex(ValueError, "output_tokens must be an integer >= 1"):
+                    Limits(output_tokens=output_tokens)
+
+    def test_optional_nonnegative_cost_is_accepted(self):
+        for max_cost_usd in (None, 0, 0.0, 0.001, 1):
+            with self.subTest(max_cost_usd=max_cost_usd):
+                self.assertEqual(Limits(max_cost_usd=max_cost_usd).max_cost_usd, max_cost_usd)
+
+    def test_invalid_cost_raises_value_error(self):
+        for max_cost_usd in (-1, -0.001, float("nan"), "0", True, False):
+            with self.subTest(max_cost_usd=max_cost_usd):
+                with self.assertRaisesRegex(ValueError, "max_cost_usd must be None or a number >= 0"):
+                    Limits(max_cost_usd=max_cost_usd)
+
     def test_is_immutable(self):
         with self.assertRaises(dataclasses.FrozenInstanceError):
             Limits().output_tokens = 5
