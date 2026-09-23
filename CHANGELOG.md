@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+- `request_json` now raises `RouterError` (with the original exception chained) for non-JSON responses, read timeouts and connection errors, so `except RouterError:` fallbacks work as documented.
+
 ## [0.1.0] - 2026-09-23
 
 ### Added
