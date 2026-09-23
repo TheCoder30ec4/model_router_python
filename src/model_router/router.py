@@ -1,3 +1,4 @@
+import asyncio
 from functools import partial
 
 from . import jev
@@ -90,3 +91,7 @@ class Router:
         if len(candidates) == 1:
             return candidates[0].id
         return self._choose(task, in_tokens, candidates, limits)
+
+    async def aroute(self, task, limits=None):
+        """Asynchronously return the id of the best model for `task`."""
+        return await asyncio.to_thread(self.route, task, limits=limits)
