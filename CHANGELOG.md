@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `Router(timeout=60)` configures the HTTP timeout in seconds for catalog downloads and both routing backends.
+
 ## [0.1.0] - 2026-09-23
 
 ### Added

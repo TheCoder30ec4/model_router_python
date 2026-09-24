@@ -9,7 +9,7 @@ CATALOG_TTL_SECONDS = 24 * 3600
 _cache = {"at": 0.0, "data": None}
 
 
-def fetch_catalog(max_age=CATALOG_TTL_SECONDS):
+def fetch_catalog(max_age=CATALOG_TTL_SECONDS, *, timeout=60):
     """Live prices, context and output limits for every text model on OpenRouter, keyed by id.
 
     Public endpoint, no key needed. Fetched once and shared by every Router in the process,
@@ -19,7 +19,7 @@ def fetch_catalog(max_age=CATALOG_TTL_SECONDS):
     if _cache["data"] is None or time.time() - _cache["at"] > max_age:
         _cache["data"] = {
             m["id"]: ModelInfo.from_openrouter(m)
-            for m in request_json(MODELS_URL)["data"]
+            for m in request_json(MODELS_URL, timeout=timeout)["data"]
             if "text" in ((m.get("architecture") or {}).get("output_modalities") or ["text"])
         }
         _cache["at"] = time.time()

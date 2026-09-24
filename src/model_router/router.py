@@ -21,6 +21,7 @@ class Router:
         models=None,
         limits=Limits(),
         models_per_provider=None,
+        timeout=60,
     ):
         """
         Routing backend (one is required; jev_api_key wins if both are given):
@@ -42,8 +43,9 @@ class Router:
 
         self.provider_keys = dict(providers) if isinstance(providers, dict) else {}
         self.limits = limits
+        self.timeout = timeout
         # Live prices/context/limits, fetched once and cached (see catalog.fetch_catalog).
-        catalog = fetch_catalog()
+        catalog = fetch_catalog(timeout=self.timeout)
 
         if models:
             unknown = [m for m in models if m not in catalog]
@@ -89,4 +91,4 @@ class Router:
             raise NoModelFitsError("; ".join(f"{i}: {r}" for i, r in reasons.items()))
         if len(candidates) == 1:
             return candidates[0].id
-        return self._choose(task, in_tokens, candidates, limits)
+        return self._choose(task, in_tokens, candidates, limits, timeout=self.timeout)
