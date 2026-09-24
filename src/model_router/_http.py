@@ -19,3 +19,9 @@ def request_json(url, api_key=None, body=None, timeout=60):
         raise RouterError(f"{url} -> HTTP {e.code}: {e.read().decode(errors='replace')[:500]}") from e
     except urllib.error.URLError as e:
         raise RouterError(f"{url} -> {e.reason}") from e
+    except TimeoutError as e:
+        raise RouterError(f"{url} -> timed out after {timeout}s") from e
+    except OSError as e:
+        raise RouterError(f"{url} -> {e}") from e
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        raise RouterError(f"{url} -> response was not valid JSON: {e}") from e

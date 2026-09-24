@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Fixed
-- Reject invalid `Limits` values with a clear `ValueError`: `output_tokens` must be a positive integer, and `max_cost_usd` must be `None` or a nonnegative number. Booleans and NaN are rejected; a zero budget remains valid.
+- `request_json` now raises `RouterError` (with the original exception chained) for non-JSON responses, read timeouts and connection errors, so `except RouterError:` fallbacks work as documented.
 
 ## [0.1.0] - 2026-09-23
 
