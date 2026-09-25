@@ -174,10 +174,11 @@ These are real outputs from `examples/basic.py`.
 
 | Call | What it does |
 |---|---|
-| `Router(*, jev_api_key=None, openrouter_api_key=None, providers=None, models=None, limits=Limits(), models_per_provider=None, timeout=60)` | All arguments are keyword-only. Loads live prices, context sizes and output limits (cached for 24h, no key needed). `timeout` is the HTTP timeout in seconds for catalog downloads and Jev/OpenRouter routing calls (e.g. `timeout=5`); it is passed to `urllib.request.urlopen`, not a total routing deadline. Raises `UnknownModelError` for unknown model ids or providers. |
+| `Router(*, jev_api_key=None, openrouter_api_key=None, providers=None, models=None, limits=Limits(), models_per_provider=None, timeout=60)` | All arguments are keyword-only. Loads live prices, context sizes and output limits (cached for 24h, no key needed). `timeout` is the HTTP timeout in seconds for catalog downloads and Jev/OpenRouter routing calls (e.g. `timeout=5`); it is passed to `urllib.request.urlopen`, not a total routing deadline, and must be a finite number > 0 (`ValueError` otherwise). Raises `UnknownModelError` for unknown model ids or providers. |
 | `refresh_catalog()` | Clears the cached model list, so the next `Router` downloads fresh prices. |
 | `router.api_key_for(model_id) -> str \| None` | The key you passed in `providers={...}` for this model's provider. |
 | `router.route(task, limits=None) -> str` | Returns the best model id for `task`. |
+| `await router.aroute(task, limits=None) -> str` | Async version of `route()` for asyncio apps. Runs `route()` in a worker thread, so the event loop isn't blocked; same results and errors. |
 | `router.fitting(task, limits=None) -> list[ModelInfo]` | Returns the models that pass the limits, without calling Jev (free). |
 | `Limits(output_tokens=1024, max_cost_usd=None)` | The output size you expect and an optional cost cap for each call. |
 
@@ -188,7 +189,7 @@ Booleans and NaN are rejected. Invalid limits raise `ValueError` with the field 
 Routing errors (all subclasses of `RouterError`):
 - `NoModelFitsError`: no model passes the limits. The message gives the reason for each model.
 - `UnknownModelError`: a model id isn't on OpenRouter.
-- `RouterError`: no routing key, a network or HTTP failure, or an error returned by Jev (e.g. a rate limit).
+- `RouterError`: no routing key, a network or HTTP failure, a timeout, a response that isn't valid JSON, or an error returned by Jev (e.g. a rate limit).
 
 ### Using it in an agent
 

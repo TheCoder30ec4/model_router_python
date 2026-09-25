@@ -1,6 +1,6 @@
 [project]
 name = "model-router-python"
-version = "0.1.0"
+version = "0.2.0"
 description = "Pick the right LLM for every task: filter by context, output and cost limits, then let Jev choose the most efficient model."
 readme = "README.md"
 requires-python = ">=3.12"
