@@ -53,6 +53,29 @@ class RequestJsonTest(unittest.TestCase):
                 request_json("https://x.test/a")
         self.assertIn("no route", str(ctx.exception))
 
+    def test_non_json_body_becomes_router_error(self):
+        resp = MagicMock()
+        resp.__enter__.return_value = io.BytesIO(b"<html>oops</html>")
+        with patch("urllib.request.urlopen", return_value=resp):
+            with self.assertRaises(RouterError) as ctx:
+                request_json("https://x.test/a")
+        self.assertIsInstance(ctx.exception.__cause__, json.JSONDecodeError)
+
+    def test_read_timeout_becomes_router_error(self):
+        resp = MagicMock()
+        resp.__enter__.return_value.read.side_effect = TimeoutError("The read operation timed out")
+        with patch("urllib.request.urlopen", return_value=resp):
+            with self.assertRaises(RouterError) as ctx:
+                request_json("https://x.test/a", timeout=5)
+        self.assertIn("timed out", str(ctx.exception))
+        self.assertIsInstance(ctx.exception.__cause__, TimeoutError)
+
+    def test_connection_reset_becomes_router_error(self):
+        with patch("urllib.request.urlopen", side_effect=ConnectionResetError("reset by peer")):
+            with self.assertRaises(RouterError) as ctx:
+                request_json("https://x.test/a")
+        self.assertIsInstance(ctx.exception.__cause__, ConnectionResetError)
+
 
 if __name__ == "__main__":
     unittest.main()

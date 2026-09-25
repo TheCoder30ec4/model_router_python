@@ -1,3 +1,4 @@
+import asyncio
 from functools import partial
 
 from . import jev
@@ -48,6 +49,7 @@ class Router:
         catalog = fetch_catalog(timeout=self.timeout)
 
         if models:
+            models = list(dict.fromkeys(models))
             unknown = [m for m in models if m not in catalog]
             if unknown:
                 raise UnknownModelError(f"Not in OpenRouter catalog: {unknown}")
@@ -59,6 +61,7 @@ class Router:
                 if not found:
                     raise UnknownModelError(f"No models found for provider '{p}'")
                 self.models += found
+            self.models = list(dict.fromkeys(self.models))
 
     def api_key_for(self, model_id):
         """The API key you passed for this model's provider, or None."""
@@ -91,4 +94,8 @@ class Router:
             raise NoModelFitsError("; ".join(f"{i}: {r}" for i, r in reasons.items()))
         if len(candidates) == 1:
             return candidates[0].id
-        return self._choose(task, in_tokens, candidates, limits, timeout=self.timeout)
+        return self._choose(task, in_tokens, candidates, limits)
+
+    async def aroute(self, task, limits=None):
+        """Asynchronously return the id of the best model for `task`."""
+        return await asyncio.to_thread(self.route, task, limits=limits)

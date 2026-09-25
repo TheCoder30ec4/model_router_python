@@ -1,4 +1,4 @@
-import io
+import asyncio
 import json
 import unittest
 from unittest.mock import MagicMock, patch
@@ -101,6 +101,14 @@ class ConfigTest(unittest.TestCase):
     def test_provider_names_use_all_current_models(self):
         r = make_router(models=None, providers=["acme"])
         self.assertEqual([m.id for m in r.models], ["acme/new", "acme/old"])  # no :batch, no retiring
+
+    def test_duplicate_models_deduplicated_preserving_order(self):
+        r = make_router(models=["cheap/small", "cheap/small", "big/smart"])
+        self.assertEqual([m.id for m in r.models], ["cheap/small", "big/smart"])
+
+    def test_duplicate_providers_deduplicated_preserving_order(self):
+        r = make_router(models=None, providers=["acme", "acme"])
+        self.assertEqual([m.id for m in r.models], ["acme/new", "acme/old"])
 
     def test_catalog_is_fetched_once_and_cached(self):
         from model_router import catalog
@@ -244,6 +252,42 @@ class RouterBehaviorTest(unittest.TestCase):
     def test_errors_share_a_base_class(self):
         self.assertTrue(issubclass(NoModelFitsError, RouterError))
         self.assertTrue(issubclass(UnknownModelError, RouterError))
+
+
+class AsyncRouterTest(unittest.TestCase):
+    def test_aroute_single_candidate(self):
+        r = make_router(["big/smart"])
+        self.assertEqual(asyncio.run(r.aroute("hi")), "big/smart")
+
+    @patch("model_router.jev.request_json", return_value={"code": 0, "data": {"decision": "cheap/small"}})
+    def test_aroute_dispatches_with_custom_limits(self, req):
+        r = make_router(openrouter_api_key=None, jev_api_key="jev-key")
+        decision = asyncio.run(r.aroute("hi", limits=Limits(output_tokens=100)))
+        self.assertEqual(decision, "cheap/small")
+        url, key, body = req.call_args.args
+        self.assertTrue(url.endswith("/decisions/model-route"))
+        self.assertEqual(key, "jev-key")
+        self.assertEqual([c["id"] for c in body["candidates"]], ["cheap/small", "big/smart"])
+
+    @patch("model_router.jev.request_json", return_value={"answers": {"model": {"choice": "m1"}}})
+    def test_aroute_matches_route_behavior(self, req):
+        r = make_router()
+        sync_decision = r.route("hi")
+        async_decision = asyncio.run(r.aroute("hi"))
+        self.assertEqual(async_decision, sync_decision)
+
+    def test_aroute_raises_no_model_fits_error(self):
+        with self.assertRaises(NoModelFitsError):
+            asyncio.run(make_router().aroute("x" * 5_000_000))
+
+    @patch(
+        "model_router.jev.request_json",
+        return_value={"code": -1, "message": "Too many requests", "data": None},
+    )
+    def test_aroute_propagates_router_error(self, req):
+        r = make_router(openrouter_api_key=None, jev_api_key="jev-key")
+        with self.assertRaises(RouterError):
+            asyncio.run(r.aroute("hi"))
 
 
 if __name__ == "__main__":
