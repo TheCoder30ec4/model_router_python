@@ -76,6 +76,15 @@ class RequestJsonTest(unittest.TestCase):
                 request_json("https://x.test/a")
         self.assertIsInstance(ctx.exception.__cause__, ConnectionResetError)
 
+    def test_json_that_is_not_an_object_becomes_router_error(self):
+        for body in (b"null", b"[1, 2]", b'"ok"'):
+            with self.subTest(body=body):
+                resp = MagicMock()
+                resp.__enter__.return_value = io.BytesIO(body)
+                with patch("urllib.request.urlopen", return_value=resp):
+                    with self.assertRaises(RouterError):
+                        request_json("https://x.test/a")
+
 
 if __name__ == "__main__":
     unittest.main()

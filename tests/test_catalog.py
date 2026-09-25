@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from model_router import ModelInfo, catalog
+from model_router import ModelInfo, RouterError, catalog
 
 
 def raw(id, output=("text",), **extra):
@@ -48,6 +48,12 @@ class FetchCatalogTest(unittest.TestCase):
         with patch("model_router.catalog.time.time", return_value=10**12):
             catalog.fetch_catalog(max_age=0)
         self.assertEqual(req.call_count, 2)
+
+    def test_response_without_data_list_is_router_error(self):
+        for res in ({}, {"error": {"message": "down"}}, {"data": None}):
+            with self.subTest(res=res), patch("model_router.catalog.request_json", return_value=res):
+                with self.assertRaises(RouterError):
+                    catalog.fetch_catalog()
 
 
 def info(id, created=0, expires=None):
