@@ -34,9 +34,9 @@ class Router:
           models     exact OpenRouter-style ids, e.g. ["anthropic/claude-opus-5.5"]; overrides the auto-pick
         """
         if jev_api_key:
-            self._choose = partial(jev.choose_via_jev, jev_api_key)
+            self._choose = partial(jev.choose_via_jev, jev_api_key, timeout=timeout)
         elif openrouter_api_key:
-            self._choose = partial(jev.choose_via_openrouter, openrouter_api_key)
+            self._choose = partial(jev.choose_via_openrouter, openrouter_api_key, timeout=timeout)
         else:
             raise RouterError("Pass jev_api_key or openrouter_api_key")
         if not providers and not models:
