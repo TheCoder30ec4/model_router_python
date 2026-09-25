@@ -82,6 +82,14 @@ class LimitsTest(unittest.TestCase):
         with self.assertRaises(dataclasses.FrozenInstanceError):
             Limits().output_tokens = 5
 
+    def test_not_negative_output_tokens(self):
+        with self.assertRaises(ValueError):
+            Limits(output_tokens=0, max_cost_usd=1)
+
+    def test_not_negative_max_cost_usd(self):
+        with self.assertRaises(ValueError):
+            Limits(output_tokens=1024, max_cost_usd=-1)
+
 
 if __name__ == "__main__":
     unittest.main()
