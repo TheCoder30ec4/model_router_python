@@ -33,6 +33,12 @@ class Router:
                      uses every current model from those providers (or the newest `models_per_provider`)
           models     exact OpenRouter-style ids, e.g. ["anthropic/claude-opus-5.5"]; overrides the auto-pick
         """
+        if (
+            isinstance(timeout, bool)
+            or not isinstance(timeout, (int, float))
+            or not 0 < timeout < float("inf")
+        ):
+            raise ValueError("timeout must be a finite number of seconds > 0")
         if jev_api_key:
             self._choose = partial(jev.choose_via_jev, jev_api_key, timeout=timeout)
         elif openrouter_api_key:

@@ -1,6 +1,7 @@
 import time
 
 from ._http import request_json
+from .errors import RouterError
 from .models import ModelInfo
 
 MODELS_URL = "https://openrouter.ai/api/v1/models"
@@ -17,9 +18,12 @@ def fetch_catalog(max_age=CATALOG_TTL_SECONDS, *, timeout=60):
     """
     # ponytail: in-process cache only; persist to disk if many short-lived processes each pay the fetch
     if _cache["data"] is None or time.time() - _cache["at"] > max_age:
+        data = request_json(MODELS_URL, timeout=timeout).get("data")
+        if not isinstance(data, list):
+            raise RouterError(f"{MODELS_URL} -> response has no 'data' list")
         _cache["data"] = {
             m["id"]: ModelInfo.from_openrouter(m)
-            for m in request_json(MODELS_URL, timeout=timeout)["data"]
+            for m in data
             if "text" in ((m.get("architecture") or {}).get("output_modalities") or ["text"])
         }
         _cache["at"] = time.time()

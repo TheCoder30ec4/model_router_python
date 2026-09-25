@@ -14,7 +14,7 @@ def request_json(url, api_key=None, body=None, timeout=60):
     req = urllib.request.Request(url, data=data, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            return json.load(r)
+            res = json.load(r)
     except urllib.error.HTTPError as e:
         raise RouterError(f"{url} -> HTTP {e.code}: {e.read().decode(errors='replace')[:500]}") from e
     except urllib.error.URLError as e:
@@ -25,3 +25,6 @@ def request_json(url, api_key=None, body=None, timeout=60):
         raise RouterError(f"{url} -> {e}") from e
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         raise RouterError(f"{url} -> response was not valid JSON: {e}") from e
+    if not isinstance(res, dict):
+        raise RouterError(f"{url} -> expected a JSON object, got {type(res).__name__}")
+    return res

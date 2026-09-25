@@ -40,6 +40,11 @@ def make_router(models=("cheap/small", "big/smart"), limits=None, **kw):
 
 
 class ConfigTest(unittest.TestCase):
+    def test_invalid_timeout_is_rejected(self):
+        for bad in (0, -1, None, "5", True, float("nan"), float("inf")):
+            with self.subTest(timeout=bad), self.assertRaises(ValueError):
+                make_router(timeout=bad)
+
     def test_timeout_reaches_both_routing_backends(self):
         for backend, payload in [
             ("jev_api_key", {"code": 0, "data": {"decision": "cheap/small"}}),

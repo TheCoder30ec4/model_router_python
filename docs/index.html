@@ -616,8 +616,9 @@ key = router.api_key_for(model)     # your OpenAI key</code></pre>
         <table>
           <thead><tr><th>Call</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td><code>Router(*, jev_api_key=None, openrouter_api_key=None, providers=None, models=None, limits=Limits(), models_per_provider=None)</code></td><td>Keyword-only. Loads live model data (cached for 24h) and works out the candidate list. Raises <code>UnknownModelError</code> for unknown model ids or providers.</td></tr>
+            <tr><td><code>Router(*, jev_api_key=None, openrouter_api_key=None, providers=None, models=None, limits=Limits(), models_per_provider=None, timeout=60)</code></td><td>Keyword-only. Loads live model data (cached for 24h) and works out the candidate list. <code>timeout</code> is the HTTP timeout in seconds for each request. Raises <code>UnknownModelError</code> for unknown model ids or providers.</td></tr>
             <tr><td><code>router.route(task, limits=None) → str</code></td><td>The best model id for <code>task</code>.</td></tr>
+            <tr><td><code>await router.aroute(task, limits=None) → str</code></td><td>Async <code>route()</code> for asyncio apps; doesn't block the event loop.</td></tr>
             <tr><td><code>router.fitting(task, limits=None) → list[ModelInfo]</code></td><td>The models that pass the limits, without calling Jev (free).</td></tr>
             <tr><td><code>router.api_key_for(model_id) → str | None</code></td><td>The key you passed in <code>providers={...}</code> for that model's provider.</td></tr>
             <tr><td><code>Limits(output_tokens=1024, max_cost_usd=None)</code></td><td>The output size you expect and an optional cost cap for each call.</td></tr>
