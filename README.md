@@ -174,7 +174,7 @@ These are real outputs from `examples/basic.py`.
 
 | Call | What it does |
 |---|---|
-| `Router(*, jev_api_key=None, openrouter_api_key=None, providers=None, models=None, limits=Limits(), models_per_provider=None)` | All arguments are keyword-only. Loads live prices, context sizes and output limits (cached for 24h, no key needed). Raises `UnknownModelError` for unknown model ids or providers. |
+| `Router(*, jev_api_key=None, openrouter_api_key=None, providers=None, models=None, limits=Limits(), models_per_provider=None, timeout=60)` | All arguments are keyword-only. Loads live prices, context sizes and output limits (cached for 24h, no key needed). `timeout` is the HTTP timeout in seconds for catalog downloads and Jev/OpenRouter routing calls (e.g. `timeout=5`); it is passed to `urllib.request.urlopen`, not a total routing deadline. Raises `UnknownModelError` for unknown model ids or providers. |
 | `refresh_catalog()` | Clears the cached model list, so the next `Router` downloads fresh prices. |
 | `router.api_key_for(model_id) -> str \| None` | The key you passed in `providers={...}` for this model's provider. |
 | `router.route(task, limits=None) -> str` | Returns the best model id for `task`. |

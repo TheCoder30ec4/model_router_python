@@ -1,7 +1,8 @@
 import asyncio
+import io
 import json
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from model_router import (
     Limits,
@@ -39,6 +40,45 @@ def make_router(models=("cheap/small", "big/smart"), limits=None, **kw):
 
 
 class ConfigTest(unittest.TestCase):
+    def test_timeout_reaches_both_routing_backends(self):
+        for backend, payload in [
+            ("jev_api_key", {"code": 0, "data": {"decision": "cheap/small"}}),
+            ("openrouter_api_key", {"answers": {"model": {"choice": "m0"}}}),
+        ]:
+            for options, expected in [({}, 60), ({"timeout": 2.5}, 2.5)]:
+                with self.subTest(backend=backend, timeout=expected):
+                    response = MagicMock()
+                    response.__enter__.return_value = io.BytesIO(json.dumps(payload).encode())
+                    with patch("urllib.request.urlopen", return_value=response) as urlopen:
+                        router = make_router(**{backend: "test-key"}, **options)
+                        self.assertEqual(router.route("hello"), "cheap/small")
+                    self.assertEqual(urlopen.call_args.kwargs["timeout"], expected)
+
+    def test_timeout_reaches_catalog_download(self):
+        from model_router.catalog import refresh_catalog
+
+        refresh_catalog()
+        self.addCleanup(refresh_catalog)
+        response = MagicMock()
+        response.__enter__.return_value = io.BytesIO(
+            json.dumps(
+                {
+                    "data": [
+                        {
+                            "id": "cheap/small",
+                            "context_length": 8000,
+                            "pricing": {"prompt": "0.0000001", "completion": "0.0000004"},
+                        }
+                    ]
+                }
+            ).encode()
+        )
+        with patch("urllib.request.urlopen", return_value=response) as urlopen:
+            router = Router(openrouter_api_key="test-key", models=["cheap/small"], timeout=5)
+            self.assertEqual(router.route("hello"), "cheap/small")
+        self.assertEqual(urlopen.call_count, 1)
+        self.assertEqual(urlopen.call_args.kwargs["timeout"], 5)
+
     def test_needs_a_routing_key(self):
         with self.assertRaises(RouterError):
             make_router(openrouter_api_key=None)

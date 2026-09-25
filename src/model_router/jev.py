@@ -51,7 +51,7 @@ def _fit(build, n_candidates):
     )
 
 
-def choose_via_jev(api_key, task, in_tokens, candidates, limits):
+def choose_via_jev(api_key, task, in_tokens, candidates, limits, *, timeout=60):
     """jevai.org model-route preset. Returns the chosen model id."""
     res = request_json(
         JEV_ROUTE_URL,
@@ -69,6 +69,7 @@ def choose_via_jev(api_key, task, in_tokens, candidates, limits):
             },
             len(candidates),
         ),
+        timeout=timeout,
     )
     decision = (res.get("data") or {}).get("decision")
     if res.get("code") != 0 or decision not in {m.id for m in candidates}:
@@ -76,7 +77,7 @@ def choose_via_jev(api_key, task, in_tokens, candidates, limits):
     return decision
 
 
-def choose_via_openrouter(api_key, task, in_tokens, candidates, limits):
+def choose_via_openrouter(api_key, task, in_tokens, candidates, limits, *, timeout=60):
     """OpenRouter decisions API running Jev. Returns the chosen model id."""
     # Aliases keep criteria keys plain; model ids contain "/" and ".".
     alias = {f"m{i}": m for i, m in enumerate(candidates)}
@@ -97,6 +98,7 @@ def choose_via_openrouter(api_key, task, in_tokens, candidates, limits):
             },
             len(candidates),
         ),
+        timeout=timeout,
     )
     picked = ((res.get("answers") or {}).get("model") or {}).get("choice")
     if picked not in alias:

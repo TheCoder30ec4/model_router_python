@@ -22,6 +22,7 @@ class Router:
         models=None,
         limits=Limits(),
         models_per_provider=None,
+        timeout=60,
     ):
         """
         Routing backend (one is required; jev_api_key wins if both are given):
@@ -33,9 +34,9 @@ class Router:
           models     exact OpenRouter-style ids, e.g. ["anthropic/claude-opus-5.5"]; overrides the auto-pick
         """
         if jev_api_key:
-            self._choose = partial(jev.choose_via_jev, jev_api_key)
+            self._choose = partial(jev.choose_via_jev, jev_api_key, timeout=timeout)
         elif openrouter_api_key:
-            self._choose = partial(jev.choose_via_openrouter, openrouter_api_key)
+            self._choose = partial(jev.choose_via_openrouter, openrouter_api_key, timeout=timeout)
         else:
             raise RouterError("Pass jev_api_key or openrouter_api_key")
         if not providers and not models:
@@ -43,8 +44,9 @@ class Router:
 
         self.provider_keys = dict(providers) if isinstance(providers, dict) else {}
         self.limits = limits
+        self.timeout = timeout
         # Live prices/context/limits, fetched once and cached (see catalog.fetch_catalog).
-        catalog = fetch_catalog()
+        catalog = fetch_catalog(timeout=self.timeout)
 
         if models:
             models = list(dict.fromkeys(models))
