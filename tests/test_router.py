@@ -144,6 +144,12 @@ class LimitsTest(unittest.TestCase):
         ids = [m.id for m in make_router().fitting("x" * 40_000)]  # ~10k tokens > 8k context
         self.assertEqual(ids, ["big/smart"])
 
+    def test_unknown_context_length_is_not_rejected(self):
+        catalog = {"acme/unknown": ModelInfo("acme/unknown", None, None, 1e-6, 1e-6, "")}
+        with patch("model_router.router.fetch_catalog", return_value=catalog):
+            r = Router(openrouter_api_key="k", models=["acme/unknown"])
+        self.assertEqual(r.route("x" * 5_000_000), "acme/unknown")
+
     def test_output_limit_filters(self):
         ids = [m.id for m in make_router().fitting("hi", Limits(output_tokens=4_000))]
         self.assertEqual(ids, ["big/smart"])

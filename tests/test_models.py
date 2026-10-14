@@ -34,10 +34,15 @@ class ModelInfoTest(unittest.TestCase):
 
     def test_missing_fields_get_safe_defaults(self):
         m = ModelInfo.from_openrouter({"id": "x/y"})
-        self.assertEqual(m.context_length, 0)
+        self.assertIsNone(m.context_length)
         self.assertIsNone(m.max_output_tokens)
         self.assertEqual((m.prompt_price, m.completion_price), (0.0, 0.0))
         self.assertEqual(m.description, "")
+
+    def test_missing_context_length_is_unknown_not_zero(self):
+        for raw in ({"id": "x/y"}, {**RAW, "context_length": None}):
+            with self.subTest(raw=raw):
+                self.assertIsNone(ModelInfo.from_openrouter(raw).context_length)
 
     def test_expiration_date_is_kept(self):
         m = ModelInfo.from_openrouter({**RAW, "expiration_date": "2026-12-01"})

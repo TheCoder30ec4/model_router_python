@@ -4,7 +4,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ModelInfo:
     id: str
-    context_length: int
+    context_length: int | None  # None = unknown; OpenRouter omitted context_length
     max_output_tokens: int | None  # None = provider sets no separate cap
     prompt_price: float  # USD per input token
     completion_price: float  # USD per output token
@@ -21,7 +21,7 @@ class ModelInfo:
         top = raw.get("top_provider") or {}
         return cls(
             id=raw["id"],
-            context_length=int(raw.get("context_length") or 0),
+            context_length=(int(raw["context_length"]) if raw.get("context_length") is not None else None),
             max_output_tokens=top.get("max_completion_tokens"),
             # OpenRouter uses negative prices for "variable"; treat as unknown (0) rather than a discount.
             prompt_price=max(float(pricing.get("prompt") or 0), 0.0),

@@ -33,7 +33,7 @@ def _header(in_tokens, limits):
 def _describe(m, in_tokens, limits, desc_chars):
     line = (
         f"{m.id} | ${m.prompt_price * 1e6:.2f}/M in, ${m.completion_price * 1e6:.2f}/M out"
-        f" | context {m.context_length} | max output {m.max_output_tokens or 'n/a'}"
+        f" | context {m.context_length or 'n/a'} | max output {m.max_output_tokens or 'n/a'}"
         f" | est. ${m.cost(in_tokens, limits.output_tokens):.6f} for this task"
     )
     return f"{line} | {m.description[:desc_chars]}" if desc_chars else line

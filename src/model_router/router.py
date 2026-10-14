@@ -74,7 +74,8 @@ class Router:
         return self.provider_keys.get(model_id.split("/", 1)[0])
 
     def _reject_reason(self, m, in_tokens, limits):
-        if m.context_length < in_tokens + limits.output_tokens:
+        # Unknown context (None) is not treated as 0: we cannot judge the fit, so the model stays a candidate.
+        if m.context_length is not None and m.context_length < in_tokens + limits.output_tokens:
             return f"context {m.context_length} < {in_tokens + limits.output_tokens} tokens"
         if m.max_output_tokens is not None and m.max_output_tokens < limits.output_tokens:
             return f"max output {m.max_output_tokens} < {limits.output_tokens} tokens"
